@@ -76,9 +76,9 @@ def scan_images(url):
             output.append(f"Missing image: {full} (No response)")
 
     if not output:
-        return "No missing images found."
+        return "No missing images.\nFound image URL's:\n" + "\n".join(seen)
 
-    return "\n".join(output)
+    return "Missing the following images:\n" + "\n".join(output) + "Found image URL's:\n" + "\n".join(seen)
 
 def scan_headers(url):
     try:
@@ -187,4 +187,4 @@ def create_module(parent=None):
 ### Used for testing functions within this file if run independent ###
 if __name__ == "__main__":
     url = "https://www.nic.edu"
-    print(scan_broken_links(url))
+    print(scan_images(url))
