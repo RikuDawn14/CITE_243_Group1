@@ -183,3 +183,9 @@ def create_module(parent=None):
     btn_full.clicked.connect(lambda: run_thread(full_scan))
 
     return widget
+
+### Used for testing functions within this file ###
+if __name__ == "__main__":
+    url = "https://www.nic.edu"
+    scan_headers(url)
+    print(scan_headers(url))
