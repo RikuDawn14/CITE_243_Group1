@@ -14,7 +14,7 @@ def get_metadata():
 
 def scan_broken_links(url):
     output = []
-    seen = set()
+    seen = []
 
     try:
         base = requests.get(url, timeout=10)
@@ -32,7 +32,7 @@ def scan_broken_links(url):
         full = urljoin(url, href)
         if full in seen:
             continue
-        seen.add(full)
+        seen.append(full)
 
         try:
             r = requests.get(full, timeout=10)
@@ -46,11 +46,12 @@ def scan_broken_links(url):
 
     return "\n".join(output)
 
+### Function to get URLs for images from webpage ###
 def scan_images(url):
-    output = []
-    seen = set()
+    output = [] # list of missing images
+    seen = [] # list of found image URLs
 
-    try:
+    try: # try to connect to the input webpage and return an error if unable
         base = requests.get(url, timeout=10)
     except Exception:
         return "Could not reach URL."
@@ -58,7 +59,7 @@ def scan_images(url):
     soup = BeautifulSoup(base.text, "html.parser")
     images = soup.find_all("img")
 
-    for img in images:
+    for img in images: # for loop to get the source information from the HTML
         src = img.get("src")
         if not src:
             continue
@@ -66,7 +67,7 @@ def scan_images(url):
         full = urljoin(url, src)
         if full in seen:
             continue
-        seen.add(full)
+        seen.append(full)
 
         try:
             r = requests.get(full, timeout=10)
@@ -88,9 +89,13 @@ def scan_headers(url):
 
     soup = BeautifulSoup(r.text, "html.parser")
 
-    h1 = len(soup.find_all("h1"))
-    h2 = len(soup.find_all("h2"))
-    h3 = len(soup.find_all("h3"))
+    h1_tags = soup.find_all("h1")
+    h2_tags = soup.find_all("h2")
+    h3_tags = soup.find_all("h3")
+
+    h1 = len(h1_tags)
+    h2 = len(h2_tags)
+    h3 = len(h3_tags)
 
     out = []
     out.append(f"H1 count: {h1}")
@@ -99,6 +104,26 @@ def scan_headers(url):
 
     if h1 == 0:
         out.append("WARNING: No H1 tag found.")
+    elif h1 > 1:
+        out.append(f"WARNING: Multiple H1 tags found [{h1}]. Best practice is to use only one H1 per page.")
+    
+    if h1 > 0: # Extract and display H1 text
+        out.append("\nH1 Tags:")
+        for i, tag in enumerate(h1_tags, 1):
+            text = tag.get_text(strip=True)
+            out.append(f"  {i}. {text}")
+    
+    if h2 > 0: # Extract and display H2 text
+        out.append("\nH2 Tags:")
+        for i, tag in enumerate(h2_tags, 1):
+            text = tag.get_text(strip=True)
+            out.append(f"  {i}. {text}")
+    
+    if h3 > 0: # Extract and display H3 text
+        out.append("\nH3 Tags:")
+        for i, tag in enumerate(h3_tags, 1):
+            text = tag.get_text(strip=True)
+            out.append(f"  {i}. {text}")
 
     return "\n".join(out)
 
