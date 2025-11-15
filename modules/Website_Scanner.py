@@ -184,7 +184,7 @@ def create_module(parent=None):
 
     return widget
 
-### Used for testing functions within this file ###
+### Used for testing functions within this file if run independent ###
 if __name__ == "__main__":
     url = "https://www.nic.edu"
     scan_headers(url)
