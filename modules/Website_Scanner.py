@@ -174,7 +174,7 @@ def create_module(parent=None):
 
         thread.started.connect(worker.run)
 
-        widget.thread_pool.append(thread)  # KEEP THREAD ALIVE
+        widget.thread_pool.append((thread, worker))  # KEEP THREAD ALIVE
         thread.start()
 
     btn_links.clicked.connect(lambda: run_thread(scan_broken_links))

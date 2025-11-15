@@ -163,7 +163,7 @@ def create_module(parent=None):
 
         thread.started.connect(worker.run)
 
-        widget.thread_pool.append(thread)
+        widget.thread_pool.append((thread, worker))
         thread.start()
 
     quick.clicked.connect(lambda: run_thread(fingerprint_server))
