@@ -20,6 +20,7 @@ build/
 *.swp
 *.swo
 *~
+.vs/
 
 # OS-specific files
 .DS_Store
