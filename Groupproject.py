@@ -40,7 +40,7 @@ class MainWindow(QtWidgets.QMainWindow):
         header.setObjectName("HeaderBar")
         header_layout = QtWidgets.QHBoxLayout(header)
         header_layout.setContentsMargins(10, 6, 10, 6)
- try:
+    try:
         r = requests.get(url, timeout=10)
     except Exception:
         return "Could not connect to server."
