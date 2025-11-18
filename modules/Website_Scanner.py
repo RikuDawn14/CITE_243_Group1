@@ -13,7 +13,7 @@ def get_metadata():
     }
 
 ### Function to check for all <a> tags and check status ###
-def scan_broken_links(url):
+def scan_broken_links(url, progress_callback=None):
     output = [] # broken links
     seen = [] # good links
 
@@ -24,8 +24,13 @@ def scan_broken_links(url):
 
     soup = BeautifulSoup(base.text, "html.parser")
     links = soup.find_all("a") # find all <a> tags
+    total_links = len(links)
 
-    for link in links: # for loop to check if <a> tag has a href attribute
+    # Calculate total links and send initial progress message
+    if progress_callback:
+        progress_callback(f"Found {total_links} links to check...\n")
+
+    for idx, link in enumerate(links, 1): # for loop to check if <a> tag has a href attribute
         href = link.get("href") # get the URL from the attribute
         if not href:
             continue
@@ -35,12 +40,19 @@ def scan_broken_links(url):
             continue
         seen.append(full)
 
+        # Send progress update showing which link we're checking
+        if progress_callback:
+            progress_callback(f"Checking link {idx}/{total_links}: {full[:60]}...\n")
+
         try: # try/except for if the URL does not load
             r = requests.get(full, timeout=10)
             if r.status_code >= 400:
                 output.append(f"Broken: {full} (Status {r.status_code})")
         except Exception:
             output.append(f"Broken: {full} (No response)")
+            # Notify user immediately when link fails
+            if progress_callback:
+                progress_callback(f"BROKEN (No response)\n")
 
     if not output: # if not errors print this
         return "No broken links found."
@@ -48,7 +60,7 @@ def scan_broken_links(url):
     return "\n".join(output) # print this if there were errors found
 
 ### Function to get URLs for images from webpage ###
-def scan_images(url):
+def scan_images(url, progress_callback=None):
     output = [] # list of missing images
     seen = [] # list of found image URLs
 
@@ -59,8 +71,13 @@ def scan_images(url):
 
     soup = BeautifulSoup(base.text, "html.parser")
     images = soup.find_all("img") # find all image tags
+    total_images = len(images)
 
-    for img in images: # for loop to get the source information from the HTML
+    # Calculate total images and send initial progress message
+    if progress_callback:
+        progress_callback(f"Found {total_images} images to check...\n")
+    
+    for idx, img in enumerate(images, 1): # for loop to get the source information from the HTML
         src = img.get("src")
         if not src:
             continue
@@ -69,6 +86,10 @@ def scan_images(url):
         if full in seen:
             continue
         seen.append(full) # add new full/src to list
+
+        # Send progress update showing which image we're checking
+        if progress_callback:
+            progress_callback(f"Checking image {idx}/{total_images}: {full[:60]}...\n")
 
         try: # try/except for if the full/src URL does not load
             r = requests.get(full, timeout=10)
@@ -83,12 +104,16 @@ def scan_images(url):
     return "Missing the following images:\n" + "\n".join(output) + "Found image URL's:\n" + "\n".join(seen)
 
 ### Function to find H1-3 HTML headings and the text for those headings ###
-def scan_headings(url):
+def scan_headings(url, progress_callback=None):
     
     try:# try to connect to the input webpage and return an error if unable
         r = requests.get(url, timeout=10)
     except Exception:
         return "Could not reach URL."
+
+    # Send initial progress message
+    if progress_callback:
+        progress_callback("Fetching page and analyzing headings...\n")
 
     soup = BeautifulSoup(r.text, "html.parser")
     # Get all heading info for each heading type
@@ -131,16 +156,27 @@ def scan_headings(url):
     return "\n".join(out)
 
 ### Function that combines all previous functions into one ###
-def scan_full(url):
+def scan_full(url, progress_callback=None):
     parts = []
+    # Send initial progress message for full scan
+    if progress_callback:
+        progress_callback("=== Starting Full Scan ===\n\n")
     parts.append("=== Broken Links ===")
-    parts.append(scan_broken_links(url))
+    if progress_callback:
+        progress_callback("Scanning for broken links...\n")
+    parts.append(scan_broken_links(url, progress_callback))
     parts.append("")
     parts.append("=== Images ===")
-    parts.append(scan_images(url))
+    if progress_callback:
+        progress_callback("\n=== Scanning Images ===\n")
+    parts.append(scan_images(url, progress_callback))
     parts.append("")
     parts.append("=== Headers ===")
-    parts.append(scan_headings(url))
+    if progress_callback:
+        progress_callback("\n=== Scanning Headers ===\n")
+    parts.append(scan_headings(url, progress_callback))
+    if progress_callback:
+        progress_callback("\n=== Scan Complete ===\n")
     return "\n".join(parts)
 
 def create_module(parent=None):
@@ -181,25 +217,26 @@ def create_module(parent=None):
             return
 
         if not url.startswith("http://") and not url.startswith("https://"):
-            url_to_use = "http://" + url
-        else:
-            url_to_use = url
+            url = "http://" + url
 
-        results.setPlainText("Scanning...\nThis may take a while.")
+        results.clear()
+        results.append("Scanning...")
 
-        worker = Worker(fn, url_to_use)
+        worker = Worker(fn, url)
         thread = QtCore.QThread()
 
         worker.moveToThread(thread)
 
-        worker.finished.connect(results.setPlainText)
-        worker.error.connect(results.setPlainText)
+        worker.progress.connect(lambda msg: results.append(msg))
 
-        worker.finished.connect(thread.quit)
-        worker.error.connect(thread.quit)
+        worker.finished.connect(lambda msg: results.append(f"\n{'='*50}\nFINAL RESULTS:\n{'='*50}\n{msg}"))
+        worker.error.connect(lambda msg: results.append(f"\nERROR: {msg}"))
 
-        thread.finished.connect(worker.deleteLater)
-        thread.finished.connect(thread.deleteLater)
+        # worker.finished.connect(thread.quit)
+        # worker.error.connect(thread.quit)
+
+        # thread.finished.connect(worker.deleteLater)
+        # thread.finished.connect(thread.deleteLater)
 
         thread.started.connect(worker.run)
 
@@ -218,7 +255,12 @@ def create_module(parent=None):
 if __name__ == "__main__":
     url = "https://www.nic.edu" 
     # uncomment desired function test
-    print(scan_images(url))
-    #print(scan_broken_links(url))
-    #print(scan_headings(url))
-    #print(scan_full(url))
+    # Simple progress callback for console testing
+    def print_progress(msg):
+        print(msg, end='')
+    
+    # Test with progress updates
+    #print(scan_images(url, print_progress))
+    print(scan_broken_links(url, print_progress))
+    #print(scan_headings(url, print_progress))
+    #print(scan_full(url, print_progress))
