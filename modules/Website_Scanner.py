@@ -243,8 +243,8 @@ def create_module(parent=None):
         worker.finished.connect(lambda msg: results.append(f"\n{'='*50}\nFINAL RESULTS:\n{'='*50}\n{msg}"))
         worker.error.connect(lambda msg: results.append(f"\nERROR: {msg}"))
 
-        worker.finished.connect(enable_buttons)
-        worker.error.connect(enable_buttons)
+        worker.finished.connect(enable_btn)
+        worker.error.connect(enable_btn)
 
         # worker.finished.connect(thread.quit)
         # worker.error.connect(thread.quit)
