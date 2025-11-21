@@ -205,6 +205,15 @@ def create_module(parent=None):
     btn_row.addWidget(btn_full)
     layout.addLayout(btn_row)
 
+    all_buttons = [btn_links, btn_imgs, btn_headers, btn_full]
+
+    def disable_btn():
+        for btn in all_buttons:
+            btn.setEnabled(False)
+    def enable_btn():
+        for btn in all_buttons:
+            btn.setEnabled(True)
+
     # Results
     results = QtWidgets.QTextEdit()
     results.setReadOnly(True)
@@ -219,6 +228,8 @@ def create_module(parent=None):
         if not url.startswith("http://") and not url.startswith("https://"):
             url = "http://" + url
 
+        disable_btn()
+
         results.clear()
         results.append("Scanning...")
 
@@ -231,6 +242,9 @@ def create_module(parent=None):
 
         worker.finished.connect(lambda msg: results.append(f"\n{'='*50}\nFINAL RESULTS:\n{'='*50}\n{msg}"))
         worker.error.connect(lambda msg: results.append(f"\nERROR: {msg}"))
+
+        worker.finished.connect(enable_buttons)
+        worker.error.connect(enable_buttons)
 
         # worker.finished.connect(thread.quit)
         # worker.error.connect(thread.quit)
