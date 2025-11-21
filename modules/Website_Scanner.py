@@ -12,15 +12,20 @@ def get_metadata():
         "description": "Scan site for broken links, images, and header tags."
     }
 
-### Function to check for all <a> tags and check status ###
-def scan_broken_links(url, progress_callback=None):
-    output = [] # broken links
-    seen = [] # good links
-
+def url_checker(url):
     try: # try to connect to the input webpage and return an error if unable
         base = requests.get(url, timeout=10)
+        if base.status_code < 300:
+            return base
+        else:
+            return "Error"
     except Exception:
-        return "Could not reach URL."
+        return "Error"
+
+### Function to check for all <a> tags and check status ###
+def scan_broken_links(url, base, progress_callback=None):
+    output = [] # broken links
+    seen = [] # good links
 
     soup = BeautifulSoup(base.text, "html.parser")
     links = soup.find_all("a") # find all <a> tags
@@ -60,14 +65,9 @@ def scan_broken_links(url, progress_callback=None):
     return "\n".join(output) # print this if there were errors found
 
 ### Function to get URLs for images from webpage ###
-def scan_images(url, progress_callback=None):
+def scan_images(url, base, progress_callback=None):
     output = [] # list of missing images
     seen = [] # list of found image URLs
-
-    try: # try to connect to the input webpage and return an error if unable
-        base = requests.get(url, timeout=10)
-    except Exception:
-        return "Could not reach URL."
 
     soup = BeautifulSoup(base.text, "html.parser")
     images = soup.find_all("img") # find all image tags
@@ -101,21 +101,16 @@ def scan_images(url, progress_callback=None):
     if not output: # if no missing images return this
         return "No missing images.\nFound image URL's:\n" + "\n".join(seen)
     # If there were missing images return this instead
-    return "Missing the following images:\n" + "\n".join(output) + "Found image URL's:\n" + "\n".join(seen)
+    return "Missing the following images:\n" + "\n".join(output) + "\nFound image URL's:\n" + "\n".join(seen)
 
 ### Function to find H1-3 HTML headings and the text for those headings ###
-def scan_headings(url, progress_callback=None):
-    
-    try:# try to connect to the input webpage and return an error if unable
-        r = requests.get(url, timeout=10)
-    except Exception:
-        return "Could not reach URL."
+def scan_headings(base, progress_callback=None):
 
     # Send initial progress message
     if progress_callback:
         progress_callback("Fetching page and analyzing headings...\n")
 
-    soup = BeautifulSoup(r.text, "html.parser")
+    soup = BeautifulSoup(base.text, "html.parser")
     # Get all heading info for each heading type
     h1_tags = soup.find_all("h1")
     h2_tags = soup.find_all("h2")
@@ -156,7 +151,7 @@ def scan_headings(url, progress_callback=None):
     return "\n".join(out)
 
 ### Function that combines all previous functions into one ###
-def scan_full(url, progress_callback=None):
+def scan_full(url, base, progress_callback=None):
     parts = []
     # Send initial progress message for full scan
     if progress_callback:
@@ -164,12 +159,12 @@ def scan_full(url, progress_callback=None):
     parts.append("=== Broken Links ===")
     if progress_callback:
         progress_callback("Scanning for broken links...\n")
-    parts.append(scan_broken_links(url, progress_callback))
+    parts.append(scan_broken_links(url, base, progress_callback))
     parts.append("")
     parts.append("=== Images ===")
     if progress_callback:
         progress_callback("\n=== Scanning Images ===\n")
-    parts.append(scan_images(url, progress_callback))
+    parts.append(scan_images(url, base, progress_callback))
     parts.append("")
     parts.append("=== Headers ===")
     if progress_callback:
@@ -205,6 +200,15 @@ def create_module(parent=None):
     btn_row.addWidget(btn_full)
     layout.addLayout(btn_row)
 
+    all_buttons = [btn_links, btn_imgs, btn_headers, btn_full]
+
+    def disable_btn():
+        for btn in all_buttons:
+            btn.setEnabled(False)
+    def enable_btn():
+        for btn in all_buttons:
+            btn.setEnabled(True)
+
     # Results
     results = QtWidgets.QTextEdit()
     results.setReadOnly(True)
@@ -219,10 +223,17 @@ def create_module(parent=None):
         if not url.startswith("http://") and not url.startswith("https://"):
             url = "http://" + url
 
+        base = url_checker(url)
+        if base == "Error":
+            results.setPlainText("Could not reach URL.")
+            return
+
+        disable_btn()
+
         results.clear()
         results.append("Scanning...")
 
-        worker = Worker(fn, url)
+        worker = Worker(fn, url, base)
         thread = QtCore.QThread()
 
         worker.moveToThread(thread)
@@ -231,6 +242,9 @@ def create_module(parent=None):
 
         worker.finished.connect(lambda msg: results.append(f"\n{'='*50}\nFINAL RESULTS:\n{'='*50}\n{msg}"))
         worker.error.connect(lambda msg: results.append(f"\nERROR: {msg}"))
+
+        worker.finished.connect(enable_btn)
+        worker.error.connect(enable_btn)
 
         # worker.finished.connect(thread.quit)
         # worker.error.connect(thread.quit)
@@ -253,14 +267,14 @@ def create_module(parent=None):
 ### Used for testing functions within this file if run independent ###
 # comment out 'from thread_worker import Worker' before testing
 if __name__ == "__main__":
-    url = "https://www.nic.edu" 
+    url = "https://www.nic,edu" 
     # uncomment desired function test
     # Simple progress callback for console testing
     def print_progress(msg):
         print(msg, end='')
     
     # Test with progress updates
-    #print(scan_images(url, print_progress))
-    print(scan_broken_links(url, print_progress))
+    print(scan_images(url, print_progress))
+    #print(scan_broken_links(url, print_progress))
     #print(scan_headings(url, print_progress))
     #print(scan_full(url, print_progress))
