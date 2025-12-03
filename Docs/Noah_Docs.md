@@ -123,7 +123,7 @@ It happens on every button in both modules. It would be best to disable the butt
 
 # 11/21/25
 ## Patch 7
-~*Some fixes may only be implemented into the Vulnerability Scanner module at this stage, but they are easily ported to the other module when fully completed*~
+*Some fixes may only be implemented into the Vulnerability Scanner module at this stage, but they are easily ported to the other module when fully completed* 
 ### Minor Formatting Bug Fix
 This is now fixed. A newline was added between the 'status 404' message and the 'Found image URL' message.
 
@@ -138,3 +138,13 @@ One new idea to consider it adding a cancel button while the scan is running inc
 
 ### Weird Crash
 I entered  github.com/noahcoook into Web Scanner -> Scan Broken Links, and it instantly crashed. This was after having it open for a while and using the scans many times. I tried on a fresh instance of the program after starting it again, and it didn't crash after handling the same input. There was 113 links to scan, maybe that contributed to it. I had this happen once in Patch 6 after pasting a long URL into the input box for one of the modules. I can't replicate it so, it may be a one-time thing.
+
+# 12/1/25
+
+## EXE Built
+I was able to get the exe built with some issues as expected. I had to redo the discover modules function in the main file. This was because pyinstaller kept failing to correctly build the paths to where the modules were located. This caused the program to compile, just with no modules loaded. I also had to create the .spec file to make the compile process a little easier. Before the .spec file, I had to manually use pyinstaller flags to add the modules folder. The .spec file did this for me and shortened the command to build. The command to build, after the cwd is the project folder, is as follows:
+
+``` pyinstaller Groupproject.spec --clean
+```
+## v1.0
+I tested the final version with all my previous finds, and it seems to be working very well. When you stop a scan, it does take a moment to be able to start a scan again, this didn't really affect my experience though. The exe does take a moment to open at first, but this is expected. From all my testing, this realease seem to be solid and working well. 

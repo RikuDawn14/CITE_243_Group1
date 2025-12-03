@@ -11,7 +11,7 @@
 ___
 
 # Project description
-This is a basic vulnerability scanner designed to test ports, run a vulnerability scan on any site, and also to check any broken links, missing photos, or missing headers on a site. The port scanner is able to scan a range of specified ports as well as the host computer. It also has a built in gateway scanner, service detection, banner grabbing, and OS fingerprinting. You can also alter how many threads to use in order to speed up the scan time. There is also some preset port ranges already set (Well-Known, Registered, All Ports). The scan results can be exported as a TXT, CSV, or JSON file. We also have a vulnerability reccomendations to recommend  changes based on the missing security headers. The Vulnerability scanner will check the security headers, SSL certificates, as well as a basic port probe. We also have a website scanner to check for any broken links, scan any images on the site, as well as scan the headers for that site. You can use either an IP or hostname for all modules. 
+This is a basic vulnerability scanner designed to test ports, run a vulnerability scan on any site, and also to check any broken links, missing photos, or missing headers on a site. The port scanner is able to scan a range of specified ports as well as the host computer. It also has a built in gateway scanner, service detection, banner grabbing, and OS fingerprinting. You can also alter how many threads to use in order to speed up the scan time. There is also some preset port ranges already set (Well-Known, Registered, All Ports). The scan results can be exported as a TXT, CSV, or JSON file. We also have a vulnerability recommendations to recommend  changes based on the missing security headers. The Vulnerability scanner will check the security headers, SSL certificates, as well as a basic port probe. We also have a website scanner to check for any broken links, scan any images on the site, as well as scan the headers for that site. You can use either an IP or hostname for all modules. 
 
 ---
 
@@ -113,7 +113,7 @@ Just run the exe, easy as that.
 ### Philip - Project Manager
 
 ### Noah - Tester
-Did the general testing. Found some bugs and opened issues on those bugs, as well as coming up with some new features that would be nice. Some quality of life changes as well were implemented because of some findings. I updated this README.md to add the program description, how to use, and instructions to run the program. Biggest contribution was the bug testing and weird edge case that were found. Those can be found in the [Noah_Docs.md](https://github.com/RikuDawn14/CITE_243_Group1/blob/main/Docs/Noah_Docs.md)
+Did the general testing. Found some bugs and opened issues on those bugs, as well as coming up with some new features that would be nice. Some quality of life changes as well were implemented because of some findings. I updated this README.md to add the program description, how to use, and instructions to run the program. Biggest contribution was the bug testing and weird edge case that were found. Those can be found in the [Noah_Docs.md](https://github.com/RikuDawn14/CITE_243_Group1/blob/main/Docs/Noah_Docs.md).  I also got the exe all built and ready to go. The .spec file is used to tell pyinstaller how to pull the modules and where they are in the code. I also had to change a module used in the main file to dynamically build the paths for the modules (more in my Docs). 
 
 ### Cole - Dev 1
 
